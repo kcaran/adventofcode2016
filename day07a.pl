@@ -50,7 +50,6 @@ while (<$input_fh>) {
   chomp;
 
   $count++ if (is_ipv7( $_ ));
-print "$_\n" if (is_ipv7( $_ ));
  }
 
 print "The number of ipv7 addresses is $count\n";
