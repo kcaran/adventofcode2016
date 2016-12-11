@@ -18,6 +18,12 @@ my @outputs = ();
     return $self;
    }
 
+  sub val {
+    my $self = shift;
+
+    return $self->{ value };
+   }
+
   sub new {
     my $class = shift;
     my $num = shift;
@@ -155,5 +161,7 @@ for my $inst (@instructions) {
 for my $inst (@instructions) {
   init_values( $inst );
  }
+
+print "The product is ", $outputs[0]->val() * $outputs[1]->val() * $outputs[2]->val(), "\n";
 
 exit;
