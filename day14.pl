@@ -7,6 +7,17 @@ use warnings;
 
 use Digest::MD5 qw( md5_hex );
 
+my $hash_cnt = 2016;
+sub get_hash
+ {
+  my $input = shift;
+  my $md5 = md5_hex( $input );
+  for (my $i = 0; $i < $hash_cnt; $i++) {
+    $md5 = md5_hex( $md5 );
+   }
+  return $md5; 
+ }
+
 my $salt = $ARGV[0] || die "Please enter the salt\n";
 
 my $triples;
@@ -15,7 +26,7 @@ my @keys;
 my $index = 0;
 my $last = 64;
 while (@keys < $last) {
-  my $md5 = md5_hex( sprintf "${salt}%d", $index );
+  my $md5 = get_hash( sprintf "${salt}%d", $index );
 
   # Find exactly five in a row
   if ($md5 =~ /((.)(\2{4}))/) {
