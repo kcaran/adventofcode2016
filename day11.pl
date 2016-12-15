@@ -8,6 +8,8 @@ use warnings;
 { package Map;
 
   my $top_floor = 3;
+# my @elements = qw( h l );
+# my @elements = qw( po th pr ru co );
   my @elements = qw( po th pr ru co el di );
 
   sub fried_micros {
@@ -32,10 +34,33 @@ use warnings;
   sub from_legend {
     my $legend = shift;
     my $items = { split( /(\d+)/, $legend ) };
+    
+    my @floor_range = sort values %{ $items };
 
     return if (fried_micros( $items ));
 
-    return { legend => $legend, items => $items };
+    return { legend => $legend, items => $items,
+		max_floor => $floor_range[-1],
+		min_floor => $floor_range[0],
+	};
+   }
+
+  sub go_up {
+    my $self = shift;
+    my $efloor = $self->{ items }{ E };
+
+    # Don't bother going up if there are still things below us
+    return if ($efloor == $top_floor);
+    return if $efloor == $self->{ max_floor } && ($self->{ max_floor } - $self->{ min_floor }) > 1;
+    return 1;
+   }
+
+  sub go_down {
+    my $self = shift;
+    my $efloor = $self->{ items }{ E };
+
+    # Don't bother going down if not necessary
+    return ($efloor != $self->{ min_floor });
    }
 
   sub to_legend {
@@ -56,8 +81,8 @@ use warnings;
     my @next_steps;
 
     for (my $i = 0; $i < @onfloor; $i++) {
-      if ($efloor < $top_floor) {
-        # Going up - first just this item
+      # Going up - don't bother if we are at highest
+      if ($self->go_up()) {
         my %new = %{ $self->{ items } };
         $new{ E }++;
         $new{ $onfloor[$i] }++;
@@ -70,7 +95,7 @@ use warnings;
           push @next_steps, to_legend( \%new2 );
          }
        }
-      if ($efloor > 0) {
+      if ($self->go_down()) {
         # Going down - first just this item
         my %new = %{ $self->{ items } };
         $new{ E }--;
@@ -105,6 +130,7 @@ use warnings;
 }
 
 #my $init = "E0hg1hm0lg2lm0";
+#my $init = "E0pog0pom1thg0thm0prg0prm1rug0rum0cog0com0";
 my $init = "E0pog0pom1thg0thm0prg0prm1rug0rum0cog0com0elg0elm0dig0dim0";
 my $count = 0;
 my @maps = ( Map->new( $init ) );
