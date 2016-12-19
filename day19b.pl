@@ -60,17 +60,6 @@ sub tail {
   $ls->[1];
 }
 
-sub find_elf {
-  my ($elves, $count) = @_;
-
-  while ($count) {
-    $elves = tail( $elves );
-    $count--;
-   }
-
-  return $elves;
-}
-
 # Set up list of elves
 my $prev;
 my $elves;
