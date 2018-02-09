@@ -42,8 +42,29 @@ use warnings;
       if ($value) {
         my $lines = $self->get_value( $data[1] );
         if ($lines) {
-          $self->{ line } += $lines;
-          return $self;
+          # Check if this is a loop
+          if ($lines == -2
+          && $self->{ instructions }[$self->{ line } - 1] eq "dec $data[0]"
+          && $self->{ instructions }[$self->{ line } - 2] =~ /^inc ([a-z])/) {
+            $self->{ registers }{ $1 } += $self->{ registers }{ $data[0] };
+            $self->{ registers }{ $data[0] } = 0;
+           }
+          elsif ($lines == -2
+          && $self->{ instructions }[$self->{ line } - 2] eq "dec $data[0]"
+          && $self->{ instructions }[$self->{ line } - 1] =~ /^inc ([a-z])/) {
+            $self->{ registers }{ $1 } += $self->{ registers }{ $data[0] };
+            $self->{ registers }{ $data[0] } = 0;
+           }
+          elsif ($lines == -2
+          && $self->{ instructions }[$self->{ line } - 1] eq "inc $data[0]"
+          && $self->{ instructions }[$self->{ line } - 2] =~ /^inc ([a-z])/) {
+            $self->{ registers }{ $1 } += -$self->{ registers }{ $data[0] };
+            $self->{ registers }{ $data[0] } = 0;
+           }
+          else {
+            $self->{ line } += $lines;
+            return $self;
+           }
          }
        }
      }
@@ -125,6 +146,6 @@ while (<$input_fh>) {
 
 #$assembler->run();
 
-$assembler->init( 'a', 7 )->run();
+$assembler->init( 'a', 12 )->run();
 
 print "The register a is ", $assembler->get_register( 'a' ), "\n";
