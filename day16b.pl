@@ -17,7 +17,7 @@ sub calc_data
   while (length( $initial ) < $length) {
     $initial = join( '', map { !$_ || 0 } reverse split( '', $initial ) ) . '0' . $initial;
 print "Length of data is ", length($initial), "\n";
-print "The data is ", join( '', reverse split '', $initial ), "\n";
+#print "The data is ", join( '', reverse split '', $initial ), "\n";
    }
 
   return substr( $initial, -$length );
@@ -26,24 +26,27 @@ print "The data is ", join( '', reverse split '', $initial ), "\n";
 sub calc_checksum
  {
   my ($data) = @_;
+  my @csum;
   my $checksum = $data;
 
   do {
    my $char = 2;
+   @csum = ();
    while ($char <= length( $checksum )) {
      my $val = (substr( $checksum, -$char, 2 ) =~ /^(.)\1/) ? 1 : 0;
-     substr( $checksum, -$char, 2 ) = $val;
-     $char++;
+     push @csum, $val;
+     $char += 2;
     }
+   $checksum = join( '', reverse @csum );
 print "Length of checksum is ", length($checksum), "\n";
-print "The checksum is ", join( '', reverse split '', $checksum ), "\n";
+#print "The checksum is ", join( '', reverse split '', $checksum ), "\n";
   } until (length($checksum) % 2);
 
   return $checksum;
  }
 
 my $data = calc_data( $initial, $length );
-print "The data is ", join( '', reverse split '', $data ), "\n";
+#print "The data is ", join( '', reverse split '', $data ), "\n";
 
 my $checksum = calc_checksum( $data );
 print "The checksum is ", join( '', reverse split '', $checksum ), "\n";
