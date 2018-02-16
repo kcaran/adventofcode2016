@@ -7,6 +7,8 @@ use warnings;
 
 use Path::Tiny;
 
+$| = 1;
+
 { package Maze;
 
   sub shortest_path {
@@ -15,6 +17,10 @@ use Path::Tiny;
     # These are the positions we've already been to
     my %seen;
  
+    my $key = join( ',', @{ $start }, @{ $end } );
+
+    return $self->{ distance }{ $key } if ($self->{ distance }{ $key });
+
     # Keep number of moves and position
     my @tries = ( [0, $start] );
 
@@ -33,25 +39,20 @@ use Path::Tiny;
                      [ $pos->[0], $pos->[1] - 1 ],
                      [ $pos->[0], $pos->[1] + 1 ] ) {
         my ($y, $x) = @{ $next_pos };
+        next if ($seen{ "$y,$x" });
         next if ($self->{ maze }[$y][$x] eq '#');
         if ($y == $end->[0] && $x == $end->[1]) {
           # This must be shortest!
+          $self->{ distance }{ $key } = $steps;
           return $steps;
          }
-
+        $seen{ "$y,$x" } = 1;
         push @tries, [ $steps, $next_pos ];
        }
      }
 
     # We shouldn't get here
     return -1;
-   }
-
-  sub shortest {
-    my ($self, $start) = @_;
-
-    my $pos = $self->{ targets }[$start];
-
    }
 
   sub init {
@@ -81,6 +82,7 @@ use Path::Tiny;
     my $self = { 
 		targets => [],
 		maze => [],
+		distance => {},
 		};
 
     bless $self, $class;
@@ -91,10 +93,48 @@ use Path::Tiny;
   }
 };
 
+sub possible_paths
+ {
+  my (@paths) = @_;
+
+  my $routes;
+  return [ [$paths[0] ] ] if (@paths == 1);
+
+  for (my $i = 0; $i < @paths; $i++) {
+    my @new_paths = @paths;
+    my $path = splice( @new_paths, $i, 1 );
+    my $new_routes = possible_paths( @new_paths );
+    for my $r ( @{ $new_routes } ) {
+      push @{ $routes }, [ $path, @{ $r } ];
+     }
+   }
+
+  return $routes; 
+ }
+
 
 my $input_file = $ARGV[0] || 'input24.txt';
 
 my $maze = Maze->new( $input_file );
 
-my $shortest = $maze->shortest_path( $maze->{ targets }[0], $maze->{ targets }[2] );
-print "$shortest\n";
+# We are starting at 0 so ignore it
+my $paths = possible_paths( ( 0 .. @{ $maze->{ targets } } - 2 ) );
+
+my $shortest = 1000000;
+for my $p (@{ $paths }) {
+   my $steps = 0;
+   for (my $i = -1; $i < @{ $p } - 1; $i++) {
+     my $from = $i < 0 ? 0 : $p->[$i] + 1;
+     my $to = $p->[$i + 1] + 1;
+     $steps += $maze->shortest_path( $maze->{ targets }[$from], $maze->{ targets }[$to] );
+     # Don't bother if it is longer
+     if ($steps > $shortest) {
+       $steps = 0;
+       last;
+      }
+    }
+
+   print "$steps for ", join( '-', @{ $p } ), "\n";
+   $shortest = $steps if ($steps && $steps < $shortest);
+  }
+print "The shortest path is: $shortest\n";
