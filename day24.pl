@@ -115,6 +115,8 @@ sub possible_paths
 
 my $input_file = $ARGV[0] || 'input24.txt';
 
+my $back_zero = $ARGV[1] ? 1 : 0;
+
 my $maze = Maze->new( $input_file );
 
 # We are starting at 0 so ignore it
@@ -123,9 +125,10 @@ my $paths = possible_paths( ( 0 .. @{ $maze->{ targets } } - 2 ) );
 my $shortest = 1000000;
 for my $p (@{ $paths }) {
    my $steps = 0;
-   for (my $i = -1; $i < @{ $p } - 1; $i++) {
+   my $last_idx = $back_zero ? @{ $p } : @{ $p } - 1;
+   for (my $i = -1; $i < $last_idx; $i++) {
      my $from = $i < 0 ? 0 : $p->[$i] + 1;
-     my $to = $p->[$i + 1] + 1;
+     my $to = ($i == @{ $p } - 1) ? 0 : $p->[$i + 1] + 1;
      $steps += $maze->shortest_path( $maze->{ targets }[$from], $maze->{ targets }[$to] );
      # Don't bother if it is longer
      if ($steps > $shortest) {
